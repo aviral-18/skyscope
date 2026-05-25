@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #050510;
+  --bg-secondary: #0a0a1a;
+  --bg-glass: rgba(10, 10, 30, 0.75);
+  --border-glass: rgba(100, 140, 220, 0.12);
+  --text-primary: #e0e0ff;
+  --text-secondary: #8899cc;
+  --accent-sky: #3b9dff;
+  --accent-emerald: #00ff88;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--border-glass);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 140, 220, 0.15); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 140, 220, 0.3); }
+
+.leaflet-container { background: var(--bg-primary) !important; font-family: 'Inter', sans-serif !important; }
+.leaflet-control-attribution { display: none !important; }
+.leaflet-popup-content-wrapper { background: var(--bg-glass) !important; color: var(--text-primary) !important; border-radius: 12px !important; border: 1px solid var(--border-glass) !important; backdrop-filter: blur(16px) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important; }
+.leaflet-popup-tip { background: var(--bg-glass) !important; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(59, 157, 255, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(59, 157, 255, 0.4); }
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-radar { animation: radar-sweep 4s linear infinite; }
+
+@media (max-width: 768px) {
+  .glass-panel { backdrop-filter: blur(10px); }
+}
+
+input[type="range"] { cursor: pointer; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-sky); margin-top: -5px; box-shadow: 0 0 8px rgba(59, 157, 255, 0.4); }
