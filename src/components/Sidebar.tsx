@@ -21,7 +21,7 @@ export default function Sidebar() {
       <button onClick={toggleSidebar} className="fixed top-4 left-4 z-[1100] glass-panel w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors md:hidden">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8899cc" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
       </button>
-      <motion.aside initial={false} animate={{ width: sidebarOpen ? 380 : 0, opacity: sidebarOpen ? 1 : 0 }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="h-full overflow-hidden flex-shrink-0 border-r border-white/5 bg-[#0a0a18]/95 backdrop-blur-xl flex flex-col z-[1050]">
+      <motion.aside initial={false} animate={{ width: sidebarOpen ? (typeof window !== 'undefined' && window.innerWidth < 768 ? window.innerWidth : 380) : 0, opacity: sidebarOpen ? 1 : 0 }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="h-full overflow-hidden flex-shrink-0 border-r border-white/5 bg-[#0a0a18]/95 backdrop-blur-xl flex flex-col z-[1050]">
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
@@ -31,7 +31,7 @@ export default function Sidebar() {
               <h1 className="text-lg font-bold text-white tracking-tight">SkyScope</h1>
               <p className="text-[10px] text-sky-400/50 uppercase tracking-widest">Live Flight Radar</p>
             </div>
-            <button onClick={toggleSidebar} className="ml-auto p-2 rounded-lg hover:bg-white/5 transition-colors hidden md:flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7faa" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button onClick={toggleSidebar} className="ml-auto p-2 rounded-lg hover:bg-white/5 transition-colors flex" aria-label="Close Sidebar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7faa" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
           </div>
           <SearchBar />
           <div className="flex gap-0.5 mt-3 p-1 rounded-xl bg-white/[0.03]">

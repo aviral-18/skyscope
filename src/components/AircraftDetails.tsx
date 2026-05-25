@@ -47,14 +47,16 @@ export default function AircraftDetails() {
     ['Country', ac.originCountry || '—'],
   ];
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ x: 400, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: 400, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="absolute top-4 right-4 w-[340px] z-[1000]"
+        initial={{ y: isMobile ? 150 : 0, x: isMobile ? 0 : 400, opacity: 0 }}
+        animate={{ y: 0, x: 0, opacity: 1 }}
+        exit={{ y: isMobile ? 150 : 0, x: isMobile ? 0 : 400, opacity: 0 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+        className="fixed bottom-20 left-4 right-4 md:absolute md:bottom-auto md:top-4 md:right-4 md:left-auto md:w-[340px] z-[1000]"
       >
         <div className="glass-panel rounded-2xl overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between">

@@ -153,11 +153,14 @@ export default function FlightMap() {
     }
 
     // Cap markers: at low zoom, show only a subset to stay responsive
-    if (visible.length > MAX_MARKERS) {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const maxMarkers = isMobile ? 800 : MAX_MARKERS;
+
+    if (visible.length > maxMarkers) {
       // Always keep selected in the list
       const selectedId = selected?.icao24;
       // Sample evenly
-      const step = Math.ceil(visible.length / MAX_MARKERS);
+      const step = Math.ceil(visible.length / maxMarkers);
       const sampled: Aircraft[] = [];
       for (let i = 0; i < visible.length; i++) {
         if (i % step === 0 || visible[i].icao24 === selectedId) {
