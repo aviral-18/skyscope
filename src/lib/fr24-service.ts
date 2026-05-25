@@ -9,20 +9,7 @@
  *  - Request throttle queue (max 1 request/sec)
  */
 
-// flightradar24-client is a CommonJS module — dynamic import handles this cleanly
-let fr24Module: any = null;
-
-async function getFR24() {
-  if (!fr24Module) {
-    try {
-      fr24Module = await import('flightradar24-client');
-    } catch (e) {
-      console.warn('flightradar24-client not available:', e);
-      return null;
-    }
-  }
-  return fr24Module;
-}
+import { fetchFromRadar, fetchFlight } from 'flightradar24-client';
 
 // ---------------------------------------------------------------------------
 // LRU Cache
@@ -106,12 +93,6 @@ export async function fetchFR24FlightDetails(
   const cached = getCached(cacheKey);
   if (cached !== undefined) return cached;
 
-  const fr24 = await getFR24();
-  if (!fr24) {
-    setCache(cacheKey, null);
-    return null;
-  }
-
   try {
     await throttle();
 
@@ -122,7 +103,7 @@ export async function fetchFR24FlightDetails(
     const east = Math.min(180, lng + boxSize);
     const west = Math.max(-180, lng - boxSize);
 
-    const flights = await fr24.fetchFromRadar(north, south, west, east);
+    const flights = await fetchFromRadar(north, south, west, east);
 
     if (!flights || flights.length === 0) {
       setCache(cacheKey, null);
@@ -157,7 +138,7 @@ export async function fetchFR24FlightDetails(
     let detail: any = null;
     try {
       await throttle();
-      detail = await fr24.fetchFlight(match.id);
+      detail = await fetchFlight(match.id);
     } catch (err) {
       console.warn(`FR24 fetchFlight failed for ID ${match.id}, using radar match fallback:`, err);
     }

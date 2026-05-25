@@ -1,5 +1,6 @@
 import { Aircraft, ATCStream } from '@/types/aviation';
 import { generateMockAircraft, updateMockPositions, mockATCStreams } from './mock-data';
+import { fetchFromRadar } from 'flightradar24-client';
 
 const useMock = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const OPENSKY_URL = process.env.NEXT_PUBLIC_OPENSKY_API_URL || 'https://opensky-network.org/api';
@@ -111,6 +112,7 @@ function getAuthHeaders(): HeadersInit {
 let cachedMockAircraft: Aircraft[] | null = null;
 
 // --- Main fetch function ---
+
 export async function fetchAircraft(): Promise<{ aircraft: Aircraft[]; source: 'live' | 'cached' | 'mock' }> {
   // Return cached data if fresh
   if (flightCache && (Date.now() - flightCache.timestamp) < CACHE_TTL) {
@@ -124,6 +126,45 @@ export async function fetchAircraft(): Promise<{ aircraft: Aircraft[]; source: '
     return { aircraft: cachedMockAircraft, source: 'mock' };
   }
 
+  // ── Tier 1: Flightradar24 (Global Radar Feed) ──────────────────────────
+  try {
+    const rawFlights = await fetchFromRadar(85, -85, -180, 180);
+    if (!rawFlights || rawFlights.length === 0) {
+      throw new Error('FR24 returned empty flights');
+    }
+
+    const aircraft: Aircraft[] = rawFlights.map((f: any) => {
+      const icao24 = f.modeSCode || f.id || '';
+      const callsign = (f.callsign || f.flight || f.id || '').trim().toUpperCase();
+      return {
+        icao24: icao24.toLowerCase(),
+        callsign,
+        originCountry: 'Live Airspace',
+        longitude: Number(f.longitude) || 0,
+        latitude: Number(f.latitude) || 0,
+        altitude: Math.round(Number(f.altitude) || 0),
+        velocity: Math.round(Number(f.speed) || 0),
+        heading: Number(f.bearing) || 0,
+        verticalRate: (Number(f.rateOfClimb) || 0) / 60,
+        onGround: Boolean(f.isOnGround),
+        squawk: f.squawkCode || '',
+        registration: f.registration || undefined,
+        aircraftType: f.model || undefined,
+        flightNumber: f.flight || undefined,
+        origin: f.origin || undefined,
+        destination: f.destination || undefined,
+        lastUpdate: f.timestamp ? f.timestamp * 1000 : Date.now(),
+        airline: f.flight ? f.flight.slice(0, 3) : detectAirline(callsign),
+      };
+    });
+
+    flightCache = { aircraft, timestamp: Date.now(), source: 'live' };
+    return { aircraft, source: 'live' };
+  } catch (err) {
+    console.warn('FR24 primary fetch failed, falling back to OpenSky:', err);
+  }
+
+  // ── Tier 2: OpenSky Network (Fallback) ──────────────────────────────────
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -145,14 +186,14 @@ export async function fetchAircraft(): Promise<{ aircraft: Aircraft[]; source: '
     flightCache = { aircraft, timestamp: Date.now(), source: 'live' };
     return { aircraft, source: 'live' };
   } catch (err) {
-    console.warn('OpenSky API failed:', err);
+    console.warn('OpenSky fallback failed:', err);
 
     // Return stale cache if available
     if (flightCache) {
       return { aircraft: flightCache.aircraft, source: 'cached' };
     }
 
-    // Last resort: mock data
+    // ── Tier 3: Mock Data (Last Resort) ───────────────────────────────────
     if (!cachedMockAircraft) cachedMockAircraft = generateMockAircraft(800);
     cachedMockAircraft = updateMockPositions(cachedMockAircraft);
     flightCache = { aircraft: cachedMockAircraft, timestamp: Date.now(), source: 'mock' };
