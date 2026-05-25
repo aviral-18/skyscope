@@ -7,7 +7,7 @@ import { useFlightStore } from '@/store/flight-store';
 import { Aircraft } from '@/types/aviation';
 
 // Max markers to render at once to keep map responsive
-const MAX_MARKERS = 800;
+const MAX_MARKERS = 3000;
 
 // Altitude-based color coding
 function getAltitudeColor(altitude: number, isSelected: boolean): string {

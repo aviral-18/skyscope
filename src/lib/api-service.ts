@@ -128,12 +128,47 @@ export async function fetchAircraft(): Promise<{ aircraft: Aircraft[]; source: '
 
   // ── Tier 1: Flightradar24 (Global Radar Feed) ──────────────────────────
   try {
-    const rawFlights = await fetchFromRadar(85, -85, -180, 180);
+    const regions = [
+      { name: 'US West / Alaska / Pacific', bounds: [85, -180, 0, -120] },
+      { name: 'US Mountain / Rockies', bounds: [85, -120, 0, -100] },
+      { name: 'US Central / Mid-West', bounds: [85, -100, 0, -80] },
+      { name: 'US East Coast / Atlantic West', bounds: [85, -80, 0, -30] },
+      { name: 'South America West', bounds: [0, -180, -85, -80] },
+      { name: 'South America East', bounds: [0, -80, -85, -30] },
+      { name: 'Atlantic East / UK West / Iberia', bounds: [85, -30, 0, -5] },
+      { name: 'Central Europe / France / Germany / Italy', bounds: [85, -5, 0, 15] },
+      { name: 'Eastern Europe / Turkey / Egypt', bounds: [85, 15, 0, 35] },
+      { name: 'Middle East / Arabian Gulf / Iran', bounds: [85, 35, 0, 60] },
+      { name: 'Southern Africa', bounds: [0, -30, -85, 60] },
+      { name: 'Asia West / India', bounds: [85, 60, 0, 100] },
+      { name: 'Asia East / Japan / China', bounds: [85, 100, 0, 180] },
+      { name: 'Oceania / Australia', bounds: [0, 60, -85, 180] },
+    ];
+
+    const promises = regions.map(r =>
+      fetchFromRadar(r.bounds[0], r.bounds[1], r.bounds[2], r.bounds[3])
+        .catch(err => {
+          console.warn(`FR24 region ${r.name} fetch failed:`, err);
+          return [];
+        })
+    );
+
+    const results = await Promise.all(promises);
+    const rawFlights = results.flat();
+
     if (!rawFlights || rawFlights.length === 0) {
       throw new Error('FR24 returned empty flights');
     }
 
-    const aircraft: Aircraft[] = rawFlights.map((f: any) => {
+    const uniqueFlights = new Map<string, any>();
+    for (const f of rawFlights) {
+      const key = f.modeSCode || f.id;
+      if (key) {
+        uniqueFlights.set(key.toLowerCase(), f);
+      }
+    }
+
+    const aircraft: Aircraft[] = Array.from(uniqueFlights.values()).map((f: any) => {
       const icao24 = f.modeSCode || f.id || '';
       const callsign = (f.callsign || f.flight || f.id || '').trim().toUpperCase();
       return {
