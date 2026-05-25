@@ -152,19 +152,26 @@ export async function GET(request: Request) {
         )
       : null;
 
-    return NextResponse.json({
-      aircraft: fr24.aircraftType || fr24.registration
-        ? {
-            manufacturer: null,
-            type: fr24.aircraftType,
-            registration: fr24.registration,
-            operator: fr24.airline,
-          }
-        : null,
-      route: origin && destination ? { origin, destination } : null,
-      flightNumber: fr24.flightNumber,
-      source: 'fr24',
-    });
+    return NextResponse.json(
+      {
+        aircraft: fr24.aircraftType || fr24.registration
+          ? {
+              manufacturer: null,
+              type: fr24.aircraftType,
+              registration: fr24.registration,
+              operator: fr24.airline,
+            }
+          : null,
+        route: origin && destination ? { origin, destination } : null,
+        flightNumber: fr24.flightNumber,
+        source: 'fr24',
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+        },
+      }
+    );
   }
 
   // ── Tier 2: OpenSky /routes + HexDB ──────────────────────────────────
@@ -181,9 +188,16 @@ export async function GET(request: Request) {
     destination = enrichAirport(openSkyRoute.destIcao, '', '', null, null, airports);
   }
 
-  return NextResponse.json({
-    aircraft: hexdb || null,
-    route: origin && destination ? { origin, destination } : null,
-    source: openSkyRoute ? 'opensky' : hexdb ? 'hexdb' : 'none',
-  });
+  return NextResponse.json(
+    {
+      aircraft: hexdb || null,
+      route: origin && destination ? { origin, destination } : null,
+      source: openSkyRoute ? 'opensky' : hexdb ? 'hexdb' : 'none',
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+      },
+    }
+  );
 }
